@@ -1,0 +1,201 @@
+================================================================================
+1. OPIS SYSTEMU
+================================================================================
+
+# Opis Systemu ServiceDesk
+
+## Wprowadzenie
+ServiceDesk to aplikacja internetowa służąca do zarządzania zgłoszeniami serwisowymi w organizacji. System umożliwia użytkownikom zgłaszanie problemów, a administratorom ich obsługę, przypisywanie priorytetów oraz komunikację z użytkownikami poprzez system komentarzy.
+
+## Główne Funkcjonalności
+
+### Dla Użytkownika (User)
+*   **Rejestracja i Logowanie:** Możliwość założenia konta i bezpiecznego logowania (JWT).
+*   **Tworzenie Zgłoszeń:** Formularz zgłaszania problemów z wyborem kategorii, priorytetu (domyślnie Medium) i opisem.
+*   **Przeglądanie Zgłoszeń:** Lista własnych zgłoszeń z możliwością filtrowania po statusie i wyszukiwania.
+*   **Szczegóły Zgłoszenia:** Podgląd szczegółów zgłoszenia i komentarzy.
+*   **Komentowanie:** Możliwość dodawania komentarzy do własnych zgłoszeń w celu doprecyzowania problemu.
+*   **Potwierdzanie Rozwiązania:** Możliwość samodzielnego zamknięcia zgłoszenia o statusie "Resolved" (potwierdzenie skuteczności naprawy).
+*   **Odrzucanie Rozwiązania:** Możliwość odrzucenia rozwiązania (status "Resolved") i ponownego otwarcia zgłoszenia (status "Open") w przypadku nieskutecznej naprawy.
+
+### Dla Administratora (Admin)
+*   **Pełny Dostęp:** Wgląd we wszystkie zgłoszenia w systemie.
+*   **Zarządzanie Zgłoszeniami:** Zmiana statusu (New, Open, Resolved). Status "Closed" jest zarezerwowany dla potwierdzenia przez użytkownika.
+*   **Statystyki:** Dashboard ze statystykami (wykresy kołowe i słupkowe) prezentującymi rozkład zgłoszeń wg statusu i priorytetu.
+*   **Raporty PDF:** Generowanie raportów PDF z listą zgłoszeń.
+*   **Zarządzanie Komentarzami:** Moderacja notatek administratora (usuwanie/edycja komentarzy).
+*   **Notatki Wewnętrzne:** Możliwość dodawania notatek widocznych tylko dla administratorów (ukrytych dla zwykłych użytkowników).
+*   **Ograniczenia:** Brak możliwości tworzenia nowych zgłoszeń (tylko edycja i zarządzanie).
+
+### Bezpieczeństwo
+*   **Automatyczne Wylogowanie:** Sesja użytkownika wygasa po zamknięciu przeglądarki (Session Storage).
+
+## Architektura Systemu
+System został zbudowany w architekturze klient-serwer:
+*   **Backend:** ASP.NET Core Web API (.NET 7)
+    *   Entity Framework Core (ORM)
+    *   SQL Server (Baza danych)
+    *   Uwierzytelnianie JWT
+*   **Frontend:** React (Vite)
+    *   Komunikacja z API przez Axios
+    *   Stylowanie: CSS Modules / Vanilla CSS (Glassmorphism design)
+    *   Wykresy: Recharts
+    *   PDF: QuestPDF (Backend)
+
+## Baza Danych
+Baza danych SQL Server przechowuje informacje o:
+*   Użytkownikach (Users)
+*   Zgłoszeniach (Tickets)
+*   Kategoriach (Categories)
+*   Komentarzach (Comments)
+
+Wykorzystano procedury składowane, widoki oraz triggery do optymalizacji operacji bazodanowych i zapewnienia spójności danych.
+
+
+================================================================================
+2. DIAGRAM ERD
+================================================================================
+
+# Diagram ERD Bazy Danych ServiceDesk
+
+[TUTAJ WKLEJ WYGENEROWANY OBRAZEK DIAGRAMU Z MERMAID LUB INNEGO NARZĘDZIA]
+
+Kod diagramu (Mermaid):
+```mermaid
+erDiagram
+    Users ||--o{ Tickets : "tworzy"
+    Users ||--o{ Comments : "pisze"
+    Categories ||--o{ Tickets : "kategoryzuje"
+    Tickets ||--o{ Comments : "posiada"
+
+    Users {
+        int Id PK
+        string Username
+        string PasswordHash
+        string Role
+    }
+
+    Categories {
+        int Id PK
+        string Name
+    }
+
+    Tickets {
+        int Id PK
+        string Title
+        string Description
+        string Status
+        string Priority
+        datetime CreatedAt
+        datetime UpdatedAt
+        int UserId FK
+        int CategoryId FK
+    }
+
+    Comments {
+        int Id PK
+        string Content
+        datetime CreatedAt
+        bool IsInternal
+        int TicketId FK
+        int UserId FK
+    }
+```
+
+## Opis Relacji
+1.  **Users - Tickets (1:N):** Jeden użytkownik może utworzyć wiele zgłoszeń. Każde zgłoszenie należy do jednego użytkownika.
+2.  **Users - Comments (1:N):** Jeden użytkownik może napisać wiele komentarzy. Każdy komentarz należy do jednego użytkownika.
+3.  **Categories - Tickets (1:N):** Jedna kategoria może być przypisana do wielu zgłoszeń. Zgłoszenie należy do jednej kategorii.
+4.  **Tickets - Comments (1:N):** Jedno zgłoszenie może mieć wiele komentarzy. Komentarz jest przypisany do konkretnego zgłoszenia.
+
+
+================================================================================
+3. WYKAZ PROCEDUR SKŁADOWANYCH, FUNKCJI I WYZWALACZY
+================================================================================
+## Procedury Składowane
+1.  **`GetTicketStatistics`**
+    *   **Opis:** Zwraca statystyki zgłoszeń, grupując je po statusie i zliczając wystąpienia. Wykorzystywana do generowania wykresów na Dashboardzie.
+    *   **Parametry:** Brak.
+2.  **`GetUserTicketsWithDetails`**
+    *   **Opis:** Pobiera szczegółową listę zgłoszeń dla konkretnego użytkownika, dołączając nazwę kategorii oraz liczbę komentarzy.
+    *   **Parametry:** `@UserId` (INT).
+3.  **`GetUserTickets`**
+    *   **Opis:** Pobiera podstawową listę zgłoszeń przypisanych do użytkownika.
+    *   **Parametry:** `@UserId` (INT).
+4.  **`UpdateTicketStatus`**
+    *   **Opis:** Aktualizuje status zgłoszenia oraz ustawia datę ostatniej modyfikacji (`UpdatedAt`).
+    *   **Parametry:** `@TicketId` (INT), `@NewStatus` (NVARCHAR).
+
+## Funkcje
+1.  **`dbo.CalculateAverageResolutionTime()`**
+    *   **Opis:** Oblicza średni czas (w godzinach) potrzebny na rozwiązanie zgłoszenia (różnica między `CreatedAt` a `UpdatedAt` dla zgłoszeń o statusie 'Resolved').
+    *   **Zwraca:** FLOAT (średnia liczba godzin).
+2.  **`GetTicketCount`**
+    *   **Opis:** Zwraca całkowitą liczbę zgłoszeń utworzonych przez danego użytkownika.
+    *   **Parametry:** `@UserId` (INT).
+    *   **Zwraca:** INT.
+
+## Wyzwalacze (Triggers)
+1.  **`UpdateTicketModifiedDate`** (Tabela: `Tickets`)
+    *   **Typ:** `AFTER UPDATE`
+    *   **Opis:** Automatycznie aktualizuje kolumnę `UpdatedAt` na bieżącą datę i czas (`GETDATE()`) przy każdej modyfikacji rekordu zgłoszenia.
+2.  **`trg_UpdateTicketTimestamp`** (Tabela: `Tickets`)
+    *   **Typ:** `AFTER UPDATE`
+    *   **Opis:** Mechanizm dublujący funkcjonalność aktualizacji czasu modyfikacji (pozostałość po wcześniejszych migracjach).
+
+
+================================================================================
+4. PREZENTACJA SYSTEMU (ZRZUTY EKRANU)
+================================================================================
+[TUTAJ WKLEJ ZRZUTY EKRANU POKAZUJĄCE DZIAŁAJĄCĄ APLIKACJĘ]
+1. Ekran Logowania
+2. Dashboard (Widok Administratora)
+3. Szczegóły Zgłoszenia
+4. Formularz Nowego Zgłoszenia
+
+
+================================================================================
+5. INSTRUKCJA URUCHOMIENIA
+================================================================================
+
+# Instrukcja Uruchomienia Projektu ServiceDesk
+
+## Wymagania
+*   .NET 7 SDK (lub nowszy)
+*   Node.js (v18+)
+*   SQL Server (LocalDB lub pełna instancja)
+
+## Krok 1: Konfiguracja Bazy Danych
+1.  Otwórz plik `appsettings.json` w folderze `ServiceDesk` (Backend).
+2.  Dostosuj `ConnectionStrings:DefaultConnection` do swojej instancji SQL Server.
+3.  Uruchom migracje, aby utworzyć bazę danych:
+    ```bash
+    cd ServiceDesk
+    dotnet ef database update
+    ```
+
+## Krok 2: Uruchomienie Backend
+1.  W terminalu przejdź do katalogu projektu backendowego:
+    ```bash
+    cd ServiceDesk
+    ```
+2.  Uruchom aplikację:
+    ```bash
+    dotnet run
+    ```
+    API będzie dostępne pod adresem `http://localhost:5054`.
+
+## Krok 3: Uruchomienie Frontend
+1.  W nowym oknie terminala przejdź do folderu `Frontend`:
+    ```bash
+    cd Frontend
+    ```
+2.  Zainstaluj zależności (jeśli uruchamiasz pierwszy raz):
+    ```bash
+    npm install
+    ```
+3.  Uruchom serwer deweloperski:
+    ```bash
+    npm run dev
+    ```
+    Aplikacja będzie dostępna pod adresem `http://localhost:5173`.
