@@ -5,25 +5,23 @@
 # Opis Systemu ServiceDesk
 
 ## Wprowadzenie
-ServiceDesk to aplikacja internetowa służąca do zarządzania zgłoszeniami serwisowymi w organizacji. System umożliwia użytkownikom zgłaszanie problemów, a administratorom ich obsługę, przypisywanie priorytetów oraz komunikację z użytkownikami poprzez system komentarzy.
-
-## Główne Funkcjonalności
+ServiceDesk to centralna platforma internetowa stworzona do zarządzania wszystkimi zgłoszeniami serwisowymi, technicznymi i prośbami o usługi w organizacji. Jego głównym zadaniem jest usprawnienie komunikacji i przekształcenie chaotycznych zapytań (e-mail, telefon) w uporządkowane, mierzalne zadania (tzw. tickety). System umożliwia użytkownikom zgłaszanie problemów, a administratorom ich obsługę oraz rozwiązywanie problemów.
 
 ### Dla Użytkownika (User)
 *   **Rejestracja i Logowanie:** Możliwość założenia konta i bezpiecznego logowania (JWT).
 *   **Tworzenie Zgłoszeń:** Formularz zgłaszania problemów z wyborem kategorii, priorytetu (domyślnie Medium) i opisem.
 *   **Przeglądanie Zgłoszeń:** Lista własnych zgłoszeń z możliwością filtrowania po statusie i wyszukiwania.
-*   **Szczegóły Zgłoszenia:** Podgląd szczegółów zgłoszenia i komentarzy.
+*   **Szczegóły Zgłoszenia:** Podgląd szczegółów zgłoszenia i zamieszczonych komentarzy.
 *   **Komentowanie:** Możliwość dodawania komentarzy do własnych zgłoszeń w celu doprecyzowania problemu.
-*   **Potwierdzanie Rozwiązania:** Możliwość samodzielnego zamknięcia zgłoszenia o statusie "Resolved" (potwierdzenie skuteczności naprawy).
-*   **Odrzucanie Rozwiązania:** Możliwość odrzucenia rozwiązania (status "Resolved") i ponownego otwarcia zgłoszenia (status "Open") w przypadku nieskutecznej naprawy.
+*   **Potwierdzanie Rozwiązania:** Możliwość samodzielnego zamknięcia zgłoszenia o statusie "Rozwiązany" (potwierdzenie skuteczności naprawy).
+*   **Odrzucanie Rozwiązania:** Możliwość odrzucenia rozwiązania (status "Rozwiązany") i ponownego otwarcia zgłoszenia (status "Otwarty") w przypadku nieskutecznej naprawy.
 
 ### Dla Administratora (Admin)
 *   **Pełny Dostęp:** Wgląd we wszystkie zgłoszenia w systemie.
-*   **Zarządzanie Zgłoszeniami:** Zmiana statusu (New, Open, Resolved). Status "Closed" jest zarezerwowany dla potwierdzenia przez użytkownika.
+*   **Zarządzanie Zgłoszeniami:** Zmiana statusu (Nowy, Otwarty, Rozwiązany). Status "Zamknięty" jest zarezerwowany dla potwierdzenia przez użytkownika.
 *   **Statystyki:** Dashboard ze statystykami (wykresy kołowe i słupkowe) prezentującymi rozkład zgłoszeń wg statusu i priorytetu.
 *   **Raporty PDF:** Generowanie raportów PDF z listą zgłoszeń.
-*   **Zarządzanie Komentarzami:** Moderacja notatek administratora (usuwanie/edycja komentarzy).
+*   **Zarządzanie Komentarzami:** Moderacja notatek administratora (usuwanie/edycja notatek).
 *   **Notatki Wewnętrzne:** Możliwość dodawania notatek widocznych tylko dla administratorów (ukrytych dla zwykłych użytkowników).
 *   **Ograniczenia:** Brak możliwości tworzenia nowych zgłoszeń (tylko edycja i zarządzanie).
 
@@ -57,8 +55,6 @@ Wykorzystano procedury składowane, widoki oraz triggery do optymalizacji operac
 ================================================================================
 
 # Diagram ERD Bazy Danych ServiceDesk
-
-[TUTAJ WKLEJ WYGENEROWANY OBRAZEK DIAGRAMU Z MERMAID LUB INNEGO NARZĘDZIA]
 
 Kod diagramu (Mermaid):
 ```mermaid
@@ -147,12 +143,15 @@ erDiagram
 ================================================================================
 4. PREZENTACJA SYSTEMU (ZRZUTY EKRANU)
 ================================================================================
-[TUTAJ WKLEJ ZRZUTY EKRANU POKAZUJĄCE DZIAŁAJĄCĄ APLIKACJĘ]
-1. Ekran Logowania
-2. Dashboard (Widok Administratora)
-3. Szczegóły Zgłoszenia
-4. Formularz Nowego Zgłoszenia
-
+1. Panel startowy
+2. Ekran logowania
+3. Ekran rejestracji
+4. Dashboard (widok administratora)
+5. Dashboard (widok użytkownika)
+6. Formularz nowego zgłoszenia
+7. Edycja zgłoszenia
+8. Szczegóły zgłoszenia (widok administratora)
+9.Szczegóły zgłoszenia (widok użytkownika)
 
 ================================================================================
 5. INSTRUKCJA URUCHOMIENIA
